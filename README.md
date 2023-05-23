@@ -13,3 +13,5 @@ IP-адрес 51.250.95.33
 Frontend https://veronikagg.student.nomoredomains.monster
 
 Backend https://api.veronikagg.student.nomoredomains.monster
+
+![screenchot](frontend/src/images/screenchot.jpg)

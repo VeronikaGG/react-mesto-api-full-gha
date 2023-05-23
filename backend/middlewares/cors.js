@@ -1,6 +1,7 @@
 const allowedCors = [
   'https://veronikagg.student.nomoredomains.monster',
   'http://veronikagg.student.nomoredomains.monster',
+  'https://localhost:3000',
   'http://localhost:3000',
 ];
 
