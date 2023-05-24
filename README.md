@@ -8,7 +8,7 @@
 
 ## Ссылки на проект
 
-IP-адрес 51.250.95.33
+IP 51.250.95.33
 
 Frontend https://veronikagg.student.nomoredomains.monster
 
