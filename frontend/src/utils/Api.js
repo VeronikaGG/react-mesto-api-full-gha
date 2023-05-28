@@ -14,6 +14,7 @@ class Api {
   //массив карточек с сервера
   getInitialCards() {
     return fetch(`${this._baseUrl}/cards`, {
+      method: "GET",
       headers: this._headers,
     }).then(this._getResponse);
   }
@@ -21,18 +22,16 @@ class Api {
   //информация пользователя (о себе)
   getUserInfo() {
     return fetch(`${this._baseUrl}/users/me`, {
+      method: "GET",
       headers: this._headers,
     }).then(this._getResponse);
   }
   //установить данные о себе
-  setUserInfo(userData) {
+  setUserInfo(data) {
     return fetch(`${this._baseUrl}/users/me`, {
-      method: 'PATCH',
       headers: this._headers,
-      body: JSON.stringify({
-        name: userData.name,
-        about: userData.about,
-      }),
+      method: 'PATCH',
+      body: JSON.stringify(data),
     }).then(this._getResponse);
   }
   //создать карточку
@@ -71,7 +70,6 @@ class Api {
     } else {
       isLiked = false;
     }
-
     return fetch(`${this._baseUrl}/cards/${id}/likes`, {
       method: isLiked ? 'PUT' : 'DELETE',
       headers: this._headers,
@@ -80,10 +78,10 @@ class Api {
 }
 
 export const api = new Api({
-  baseUrl: 'https://api.veronikagg.student.nomoredomains.monster',
-  withCredentials: true,
+  baseUrl: 'http://localhost:3000',
+  // baseUrl: 'https://api.veronikagg.student.nomoredomains.monster',
   headers: {
-    authorization: `Bearer ${ localStorage.getItem('jwt') }`,
     'Content-Type': 'application/json',
+    authorization: `Bearer ${localStorage.getItem('token')}`,
   },
 });

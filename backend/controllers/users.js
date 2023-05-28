@@ -5,36 +5,38 @@ const { OK_CODE } = require('../utils/constants');
 const NotFoundError = require('../errors/notFoundError');
 const BadRequestError = require('../errors/badRequestError');
 const ConflictError = require('../errors/conflictError');
+const AuthorizationError = require('../errors/authorizationError');
 const { NODE_ENV, JWT_SECRET } = require('../utils/constants');
 
 // аутентификация
 module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
-
-  User.findUserByCredentials(email, password)
+  User.findOne({ email })
+    .select('+password')
     .then((user) => {
-      const token = jwt.sign(
-        { _id: user._id },
-        NODE_ENV === 'production' ? JWT_SECRET : 'some-secret-key',
-        {
+      if (!user) {
+        throw new AuthorizationError('Некорректные email или пароль');
+      }
+      return bcrypt.compare(password, user.password).then((matched) => {
+        if (!matched) {
+          throw new AuthorizationError('Некорректные email или пароль');
+        }
+        const token = jwt.sign({ _id: user._id }, NODE_ENV === 'production' ? JWT_SECRET : 'some-secret-key', {
           expiresIn: '7d',
-        },
-      );
-
-      res
-        .cookie('jwt', token, {
-          maxAge: 3600000 * 24 * 7,
-          httpOnly: true,
-        })
-        .send({ message: 'Аутентификация успешна!' });
+        });
+        res.send({ token });
+      });
     })
-    .catch(next);
+    .catch((err) => {
+      next(err);
+    });
 };
+
 // возвращение всех пользователей
 module.exports.getUsers = (req, res, next) => {
   User.find({})
     .then((users) => {
-      res.send({ data: users });
+      res.send(users);
     })
     .catch(next);
 };
@@ -45,7 +47,7 @@ const findUserById = (req, res, data, next) => {
       throw new NotFoundError('Нет пользователя с таким id');
     })
     .then((user) => {
-      res.send({ data: user });
+      res.send(user);
     })
     .catch(next);
 };
@@ -98,7 +100,7 @@ const handleUserUpdate = (req, res, data, next) => {
       throw new NotFoundError('Пользователь не найден');
     })
     .then((user) => {
-      res.send({ data: user });
+      res.send(user);
     })
     .catch(next);
 };

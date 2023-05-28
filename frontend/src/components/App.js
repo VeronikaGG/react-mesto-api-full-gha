@@ -35,6 +35,22 @@ function App() {
   const [isOpenInfoTooltip, setIsOpenInfoTooltip] = React.useState(false);
   const [responseInfo, setResponseInfo] = React.useState(false);
   // const [loading, setLoading] = React.useState(true);
+//авторизация,регистрация
+React.useEffect(() => {
+  const jwt = localStorage.getItem('token');
+  if (jwt) {
+    auth
+      .checkToken()
+      .then((res) => {
+        setUserEmail(res.email);
+        setLoggedIn(true);
+        navigate('/main', { replace: true });
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  }
+}, [navigate]);
 
   React.useEffect(() => {
     loggedIn &&
@@ -46,9 +62,6 @@ function App() {
         .catch((err) => {
           console.log(err);
         });
-    // .finally(() => {
-    //   setLoading(false);
-    // });
   }, [loggedIn]);
 
   const isOpen =
@@ -88,23 +101,7 @@ function App() {
     setIsOpenInfoTooltip(false);
     setSelectedCard(null);
   }
-  //авторизация,регистрация
-  React.useEffect(() => {
-    const jwt = localStorage.getItem('token');
-    if (jwt) {
-      auth
-        .checkToken()
-        .then((res) => {
-          console.log(res);
-          setUserEmail(res.data.email);
-          setLoggedIn(true);
-          navigate('/main', { replace: true });
-        })
-        .catch((err) => {
-          console.error(err);
-        });
-    }
-  }, [navigate]);
+
   //рег.пользователя
   function handleRegister({ password, email }) {
     auth
@@ -130,6 +127,7 @@ function App() {
       .login(email, password)
       .then((data) => {
         if (data.token) {
+          localStorage.setItem('token', data.token);
           setUserEmail('');
           setLoggedIn(false);
           navigate('/main', { replace: true });
@@ -140,9 +138,6 @@ function App() {
         setResponseInfo(false);
         console.error(err);
       });
-    // .finally(() => {
-    //   setLoading(false);
-    // });
   }
 
   //лайки карточек
@@ -222,10 +217,6 @@ function App() {
         setIsAddPlacePopupOnLoading(false);
       });
   }
-
-  // if (loading) {
-  //   return 'Идет загрузка...';
-  // }
 
   //выход из профиля
   function handleSignOut() {
