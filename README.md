@@ -14,4 +14,5 @@ Frontend https://veronikagg.student.nomoredomains.monster
 
 Backend https://api.veronikagg.student.nomoredomains.monster
 
-![screenchot](frontend/src/images/photo.png)
+![screenchot](frontend/src/images/screen.png
+)

@@ -18,13 +18,19 @@ class Auth {
       body: JSON.stringify({ email: `${email}`, password: `${password}` }),
     }).then(this._getResponse);
   }
- login(email, password) {
+  login(email, password) {
     return fetch(`${this._baseUrl}/signin`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: `${email}`, password: `${password}` }),
     })
       .then(this._getResponse)
+      .then((data) => {
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+          return data;
+        }
+      });
   }
   checkToken() {
     return fetch(`${this._baseUrl}/users/me`, {
@@ -40,6 +46,6 @@ class Auth {
 }
 
 export const auth = new Auth({
-  // baseUrl: 'https://api.veronikagg.student.nomoredomains.monster',
-  baseUrl: 'http://localhost:3000',
+  baseUrl: "https://api.veronikagg.student.nomoredomains.monster",
+  // baseUrl: 'http://localhost:3000',
 });

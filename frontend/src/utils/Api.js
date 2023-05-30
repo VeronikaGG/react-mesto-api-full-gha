@@ -78,8 +78,8 @@ class Api {
 }
 
 export const api = new Api({
-  baseUrl: 'http://localhost:3000',
-  // baseUrl: 'https://api.veronikagg.student.nomoredomains.monster',
+  // baseUrl: 'http://localhost:3000',
+  baseUrl: 'https://api.veronikagg.student.nomoredomains.monster',
   headers: {
     'Content-Type': 'application/json',
     authorization: `Bearer ${localStorage.getItem('token')}`,

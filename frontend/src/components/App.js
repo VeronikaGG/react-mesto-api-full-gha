@@ -236,8 +236,8 @@ React.useEffect(() => {
             path="/main"
             element={
               <ProtectedRouteElement
+               loggedIn={loggedIn}
                 component={Main}
-                loggedIn={loggedIn}
                 cards={cards}
                 onEditAvatar={handleEditAvatarClick}
                 onEditProfile={handleEditProfileClick}

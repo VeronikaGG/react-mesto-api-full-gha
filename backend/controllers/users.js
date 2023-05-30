@@ -31,86 +31,137 @@ module.exports.login = (req, res, next) => {
       next(err);
     });
 };
-
 // возвращение всех пользователей
 module.exports.getUsers = (req, res, next) => {
   User.find({})
-    .then((users) => {
-      res.send(users);
-    })
-    .catch(next);
+    .then((users) => res.send({ data: users }))
+    .catch((err) => {
+      next(err);
+    });
 };
 // возвращение пользователя по id
-const findUserById = (req, res, data, next) => {
-  User.findById(data)
-    .orFail(() => {
-      throw new NotFoundError('Нет пользователя с таким id');
-    })
-    .then((user) => {
-      res.send(user);
-    })
-    .catch(next);
-};
-// обертка
 module.exports.getUser = (req, res, next) => {
-  const data = req.params.userId;
-  findUserById(req, res, data, next);
+  const { userId } = req.params;
+  User.findById(userId)
+    .then((user) => {
+      if (!user) {
+        throw new NotFoundError('Пользователь не найден');
+      } else {
+        res.send(user);
+      }
+    })
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new BadRequestError('Некорректный id пользователя'));
+        return;
+      }
+      next(err);
+    });
 };
-// обертка
+// получение профиля пользователя
 module.exports.getUserProfile = (req, res, next) => {
-  const data = req.user._id;
-  findUserById(req, res, data, next);
+  User.findById({ _id: req.user._id })
+    .then((user) => {
+      if (!user) {
+        throw new NotFoundError('Пользователь не найден');
+      } else {
+        res.send(user);
+      }
+    })
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new BadRequestError('Пользователь с данным id не найден'));
+        return;
+      }
+      next(err);
+    });
 };
 
 // Добавление пользователя с существующим email в БД
 module.exports.createUser = (req, res, next) => {
   const {
-    name, about, avatar, email, password,
+    name, about, avatar, email,
   } = req.body;
-
   bcrypt
-    .hash(password, 10)
+    .hash(req.body.password, 10)
     .then((hash) => User.create({
-      name,
-      about,
-      avatar,
-      email,
-      password: hash,
+      name, about, avatar, email, password: hash,
     }))
-    .then((user) => {
-      const userData = user.toObject();
-      delete userData.password;
-      res.status(OK_CODE).send(userData);
+    .then((newUser) => {
+      res.status(OK_CODE).send({
+        email: newUser.email,
+        name: newUser.name,
+        about: newUser.about,
+        avatar: newUser.avatar,
+      });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        next(new BadRequestError('Переданы некорректные данные'));
-      } else if (err.code === 11000) {
-        next(new ConflictError('Такой пользователь уже существует'));
+      if (err.code === 11000) {
+        next(
+          new ConflictError('Пользователь с данным email уже существует'),
+        );
+      } else if (err.name === 'ValidationError') {
+        next(
+          new BadRequestError(
+            'Некорректные данные для созданиия пользователя',
+          ),
+        );
       } else {
         next(err);
       }
     });
 };
 // обновление профиля пользователя
-const handleUserUpdate = (req, res, data, next) => {
-  const userId = req.user._id;
-  User.findByIdAndUpdate(userId, data, { new: true, runValidators: true })
-    .orFail(() => {
-      throw new NotFoundError('Пользователь не найден');
-    })
-    .then((user) => {
-      res.send(user);
-    })
-    .catch(next);
-};
-// обертка
 module.exports.updateUserInfo = (req, res, next) => {
-  const data = req.body;
-  handleUserUpdate(req, res, data, next);
+  const owner = req.user._id;
+  const { name, about } = req.body;
+  User.findByIdAndUpdate(
+    owner,
+    { name, about },
+    {
+      new: true,
+      runValidators: true,
+    },
+  )
+    .then((user) => {
+      if (!user) {
+        throw new NotFoundError('Пользователь с данным id не найден');
+      } else {
+        res.send(user);
+      }
+    })
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError('Некорректные данные для обновлении профиля пользователя'));
+        return;
+      }
+      next(err);
+    });
 };
-// обертка
+// обновление аватара
 module.exports.updateUserAvatar = (req, res, next) => {
-  const data = req.body;
-  handleUserUpdate(req, res, data, next);
+  const owner = req.user._id;
+  const { avatar } = req.body;
+  User.findByIdAndUpdate(
+    owner,
+    { avatar },
+    {
+      new: true,
+      runValidators: true,
+    },
+  )
+    .then((user) => {
+      if (!user) {
+        throw new NotFoundError('Пользователь с данным id не найден');
+      } else {
+        res.send(user);
+      }
+    })
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError('Некорректные данные для обновления аватара'));
+        return;
+      }
+      next(err);
+    });
 };
