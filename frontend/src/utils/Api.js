@@ -3,36 +3,42 @@ class Api {
     this._baseUrl = options.baseUrl;
     this._headers = options.headers;
   }
-
+  _updateHeaders() {
+    this._headers = {
+      ...this._headers,
+      authorization: `Bearer ${localStorage.getItem('token')}`,
+    };
+  }
   _getResponse(res) {
     if (res.ok) {
       return res.json();
-    } else {
-      return Promise.reject(`Ошибка: ${res.status}`);
     }
-  }
+    return Promise.reject(`Ошибка: ${res.status}`);
+    }
+  
   //массив карточек с сервера
-  getInitialCards() {
+  getInitialCard() {
+    this._updateHeaders(); 
     return fetch(`${this._baseUrl}/cards`, {
       method: "GET",
       headers: this._headers,
-    }).then(this._getResponse);
+    }).then((res) => this._getResponse(res));
   }
-
   //информация пользователя (о себе)
   getUserInfo() {
+    this._updateHeaders(); 
     return fetch(`${this._baseUrl}/users/me`, {
       method: "GET",
       headers: this._headers,
-    }).then(this._getResponse);
+    }).then((res) => this._getResponse(res));
   }
   //установить данные о себе
   setUserInfo(data) {
     return fetch(`${this._baseUrl}/users/me`, {
       headers: this._headers,
-      method: 'PATCH',
+      method: "PATCH",
       body: JSON.stringify(data),
-    }).then(this._getResponse);
+    }).then((res) => this._getResponse(res));
   }
   //создать карточку
   createCard(newCard) {
@@ -77,11 +83,11 @@ class Api {
   }
 }
 
-export const api = new Api({
+ const api = new Api({
   // baseUrl: 'http://localhost:3000',
   baseUrl: 'https://api.veronikagg.student.nomoredomains.monster',
   headers: {
     'Content-Type': 'application/json',
-    authorization: `Bearer ${localStorage.getItem('token')}`,
   },
 });
+export default api;

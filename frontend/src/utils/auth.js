@@ -6,31 +6,25 @@ class Auth {
   _getResponse(res) {
     if (res.ok) {
       return res.json();
-    } else {
-      return Promise.reject(`Ошибка: ${res.status}`);
     }
-  }
-
-  register(email, password) {
-    return fetch(`${this._baseUrl}/signup`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: `${email}`, password: `${password}` }),
-    }).then(this._getResponse);
-  }
+    return Promise.reject(`Ошибка: ${res.status}`);
+    }
+  
   login(email, password) {
     return fetch(`${this._baseUrl}/signin`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: `${email}`, password: `${password}` }),
     })
       .then(this._getResponse)
-      .then((data) => {
-        if (data.token) {
-          localStorage.setItem('token', data.token);
-          return data;
-        }
-      });
+  }
+  //регистрация
+  register(email, password) {
+    return fetch(`${this._baseUrl}/signup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: `${email}`, password: `${password}` }),
+    }).then(this._getResponse);
   }
   checkToken() {
     return fetch(`${this._baseUrl}/users/me`, {
@@ -43,9 +37,9 @@ class Auth {
       .then(this._getResponse)
       .then((data) => data);
   }
-}
+  }
 
-export const auth = new Auth({
-  baseUrl: "https://api.veronikagg.student.nomoredomains.monster",
-  // baseUrl: 'http://localhost:3000',
-});
+  export const auth = new Auth({
+    baseUrl: "https://api.veronikagg.student.nomoredomains.monster",
+    // baseUrl: 'http://localhost:3000',
+  });

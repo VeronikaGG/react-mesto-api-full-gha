@@ -58,7 +58,7 @@ module.exports.getUser = (req, res, next) => {
       next(err);
     });
 };
-// получение профиля пользователя
+//
 module.exports.getUserProfile = (req, res, next) => {
   User.findById({ _id: req.user._id })
     .then((user) => {

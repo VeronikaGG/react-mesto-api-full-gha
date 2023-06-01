@@ -9,12 +9,13 @@ import EditProfilePopup from './EditProfilePopup.js';
 import EditAvatarPopup from './EditAvatarPopup.js';
 import AddPlacePopup from './AddPlacePopup.js';
 import { CurrentUserContext } from '../contexts/CurrentUserContext';
-import { api } from '../utils/Api.js';
+import api  from '../utils/Api';
 import Register from './Register.js';
 import Login from './Login.js';
 import InfoTooltip from './InfoTooltip.js';
 import ProtectedRouteElement from './ProtectedRoute.js';
 import { auth } from '../utils/auth';
+// import Api from "../utils/Api";
 
 function App() {
   const [isEditProfilePopupOpen, setIsEditProfilePopupOpen] = React.useState(false);
@@ -34,38 +35,107 @@ function App() {
   const navigate = useNavigate();
   const [isOpenInfoTooltip, setIsOpenInfoTooltip] = React.useState(false);
   const [responseInfo, setResponseInfo] = React.useState(false);
-  // const [loading, setLoading] = React.useState(true);
-//авторизация,регистрация
-React.useEffect(() => {
-  const jwt = localStorage.getItem('token');
-  if (jwt) {
-    auth
-      .checkToken()
-      .then((res) => {
-        setUserEmail(res.email);
-        setLoggedIn(true);
-        navigate('/main', { replace: true });
+
+  function loadUserData() {
+    Promise.all([api.getUserInfo(), api.getInitialCard()])
+      .then(([data, cards]) => {
+        setCurrentUser(data);
+        setCards(cards);
       })
       .catch((err) => {
-        console.error(err);
+        console.error(`Ошибка: ${err}`);
       });
   }
-}, [navigate]);
-
+  //авторизация,регистрация
   React.useEffect(() => {
-    loggedIn &&
-      Promise.all([api.getUserInfo(), api.getInitialCards()])
-        .then(([userData, cards]) => {
-          setCurrentUser(userData);
-          setCards(cards);
+    const jwt = localStorage.getItem("token");
+    if (jwt) {
+      auth
+        .checkToken()
+        .then((res) => {
+          setUserEmail(res.email);
+          setLoggedIn(true);
+          navigate("/main", { replace: true });
         })
         .catch((err) => {
-          console.log(err);
+          console.error(`${err}`);
+          setLoggedIn(false); 
+          loadUserData(); 
         });
-  }, [loggedIn]);
+    }
+  }, [navigate]);
 
-  const isOpen =
-    isEditAvatarPopupOpen || isEditProfilePopupOpen || isAddPlacePopupOpen || selectedCard || isOpenInfoTooltip;
+  React.useEffect(() => {
+    if (loggedIn) {
+      loadUserData(); 
+    }
+  }, [loggedIn]);
+// React.useEffect(() => {
+//   const jwt = localStorage.getItem("token");
+//   if (jwt) {
+//     auth
+//       .checkToken()
+//       .then((res) => {
+//         setUserEmail(res.email);
+//         setLoggedIn(true);
+//         navigate("/main", { replace: true });
+//       })
+//       .catch((err) => {
+//         console.error(`${err}`);
+//       });
+//   }
+// }, [navigate]);
+// React.useEffect(() => {
+//   loggedIn &&
+//     Promise.all([api.getUserInfo(), api.getInitialCard()])
+//       .then(([data, cards]) => {
+//         setCurrentUser(data);
+//         setCards(cards);
+//       })
+//       .catch((err) => {
+//         console.error(`Ошибка: ${err}`);
+//       });
+// }, [loggedIn]);
+
+  //рег.пользователя
+  function handleRegister({ password, email }) {
+    auth
+      .register(email, password)
+      .then(() => {
+        setResponseInfo(true);
+        setIsOpenInfoTooltip(true);
+        navigate('/sign-in', { replace: true });
+      })
+      .catch((err) => {
+        setResponseInfo(false);
+        setIsOpenInfoTooltip(true);
+        console.error(err);
+      })
+      .finally(() => {
+        setIsOpenInfoTooltip(true);
+      });
+  }
+  //вход в профиль
+  function handleLogin(formData) {
+    const { email, password } = formData;
+    auth
+  .login(email, password)
+  .then((data) => {
+    if (data.token) {
+      localStorage.setItem('token', data.token);
+      setUserEmail('');
+      setLoggedIn(true);
+      navigate('/main', { replace: true });
+    }
+  })
+  .catch((err) => {
+    setIsOpenInfoTooltip(true);
+    setResponseInfo(false);
+    console.error(err);
+  });
+  }
+const isOpen =
+isEditAvatarPopupOpen || isEditProfilePopupOpen || isAddPlacePopupOpen || selectedCard || isOpenInfoTooltip;
 
   React.useEffect(() => {
     function closeByEscape(evt) {
@@ -102,43 +172,6 @@ React.useEffect(() => {
     setSelectedCard(null);
   }
 
-  //рег.пользователя
-  function handleRegister({ password, email }) {
-    auth
-      .register(email, password)
-      .then(() => {
-        setResponseInfo(true);
-        setIsOpenInfoTooltip(true);
-        navigate('/sign-in', { replace: true });
-      })
-      .catch((err) => {
-        setResponseInfo(false);
-        setIsOpenInfoTooltip(true);
-        console.error(err);
-      })
-      .finally(() => {
-        setIsOpenInfoTooltip(true);
-      });
-  }
-  //вход в профиль
-  function handleLogin(formData) {
-    const { email, password } = formData;
-    auth
-      .login(email, password)
-      .then((data) => {
-        if (data.token) {
-          localStorage.setItem('token', data.token);
-          setUserEmail('');
-          setLoggedIn(false);
-          navigate('/main', { replace: true });
-        }
-      })
-      .catch((err) => {
-        setIsOpenInfoTooltip(true);
-        setResponseInfo(false);
-        console.error(err);
-      });
-  }
 
   //лайки карточек
   function handleCardLike(card) {
@@ -219,12 +252,14 @@ React.useEffect(() => {
   }
 
   //выход из профиля
-  function handleSignOut() {
-    localStorage.removeItem('token');
-    setUserEmail('');
-    navigate('/sign-up', { replace: true });
-    setLoggedIn(false);
-  }
+ function handleSignOut() {
+  localStorage.removeItem('token');
+  setUserEmail('');
+  navigate('/sign-up', { replace: true });
+  setLoggedIn(false);
+  setCurrentUser({}); 
+  setCards([]); 
+}
 
   return (
     <div className="page">
